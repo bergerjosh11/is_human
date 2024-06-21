@@ -41,15 +41,19 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     // Resize the image to 300x300
     const resizedImageBuffer = await sharp(imgPath).resize(300, 300).toBuffer();
 
+    // Convert the resized image to a tensor
     const imgTensor = tf.node.decodeImage(resizedImageBuffer);
 
+    // Run the image through the model to detect objects
     const predictions = await model.detect(imgTensor);
 
+    // Check if any detected objects are classified as a person
     const containsPerson = predictions.some(prediction => prediction.class === 'person');
 
-    // Clean up
+    // Clean up the uploaded file
     fs.unlinkSync(imgPath);
 
+    // Return the result
     res.json({ containsPerson });
   } catch (error) {
     console.error('Error processing image:', error);
@@ -57,6 +61,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
